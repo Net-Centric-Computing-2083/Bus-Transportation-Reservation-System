@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../BusReservation.Server/BusReservation.Server/BusReservation.Server.csproj" />
+  <Project Path="BusReservation.Client/BusReservation.Client.csproj" />
+</Solution>
