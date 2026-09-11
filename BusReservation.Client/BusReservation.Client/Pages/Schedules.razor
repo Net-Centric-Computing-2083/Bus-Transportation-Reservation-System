@@ -1,0 +1,196 @@
+@page "/schedules"
+@using BusReservation.Client.Models
+@using BusReservation.Client.Services
+@inject ScheduleService ScheduleService
+
+<PageTitle>Schedules</PageTitle>
+
+<h1>Bus Schedules</h1>
+
+@if (errorMessage is not null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (schedules is null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (schedules.Count == 0)
+{
+    <p>No schedules found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Bus</th>
+                <th>Route</th>
+                <th>Driver</th>
+                <th>Date</th>
+                <th>Departure</th>
+                <th>Arrival</th>
+                <th>Fare</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var schedule in schedules)
+            {
+                <tr>
+                    <td>@schedule.ScheduleId</td>
+                    <td>@schedule.BusId</td>
+                    <td>@schedule.RouteId</td>
+                    <td>@schedule.DriverId</td>
+                    <td>@schedule.DepartureDate.ToString("yyyy-MM-dd")</td>
+                    <td>@schedule.DepartureTime</td>
+                    <td>@(schedule.ArrivalTime?.ToString() ?? "-")</td>
+                    <td>@schedule.Fare.ToString("C")</td>
+                    <td>@schedule.Status</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger"
+                                @onclick="() => DeleteAsync(schedule.ScheduleId)">
+                            Cancel
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<hr />
+
+<h3>Add New Schedule</h3>
+
+<EditForm Model="@newSchedule" OnValidSubmit="CreateAsync">
+    <div class="mb-2">
+        <label>Bus ID</label>
+        <InputNumber class="form-control" @bind-Value="newSchedule.BusId" />
+    </div>
+
+    <div class="mb-2">
+        <label>Route ID</label>
+        <InputNumber class="form-control" @bind-Value="newSchedule.RouteId" />
+    </div>
+
+    <div class="mb-2">
+        <label>Driver ID</label>
+        <InputNumber class="form-control" @bind-Value="newSchedule.DriverId" />
+    </div>
+
+    <div class="mb-2">
+        <label>Departure Date</label>
+        <InputDate class="form-control" @bind-Value="newSchedule.DepartureDate" />
+    </div>
+
+    <div class="mb-2">
+        <label>Departure Time</label>
+        <input class="form-control" type="time" @bind="departureTime" />
+    </div>
+
+    <div class="mb-2">
+        <label>Arrival Time (optional)</label>
+        <input class="form-control" type="time" @bind="arrivalTime" />
+    </div>
+
+    <div class="mb-2">
+        <label>Fare</label>
+        <InputNumber class="form-control" @bind-Value="newSchedule.Fare" />
+    </div>
+
+    <button class="btn btn-primary mt-2" type="submit">Create Schedule</button>
+</EditForm>
+
+@code {
+    private List<Schedule>? schedules;
+    private string? errorMessage;
+
+    private Schedule newSchedule = new()
+    {
+        DepartureDate = DateTime.Today,
+        Status = "Active"
+    };
+
+    private TimeOnly departureTime = new(8, 0);
+    private TimeOnly? arrivalTime;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSchedulesAsync();
+    }
+
+    private async Task LoadSchedulesAsync()
+    {
+        try
+        {
+            errorMessage = null;
+            schedules = await ScheduleService.GetSchedulesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load schedules: {ex.Message}";
+            schedules = new List<Schedule>();
+        }
+    }
+
+    private async Task CreateAsync()
+    {
+        try
+        {
+            errorMessage = null;
+
+            newSchedule.DepartureTime = departureTime.ToTimeSpan();
+
+            newSchedule.ArrivalTime = arrivalTime?.ToTimeSpan();
+
+            var success = await ScheduleService.CreateAsync(newSchedule);
+
+            if (success)
+            {
+                newSchedule = new Schedule
+                {
+                    DepartureDate = DateTime.Today,
+                    Status = "Active"
+                };
+                departureTime = new TimeOnly(8, 0);
+                arrivalTime = null;
+
+                await LoadSchedulesAsync();
+            }
+            else
+            {
+                errorMessage = "Failed to create schedule.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error creating schedule: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        try
+        {
+            errorMessage = null;
+            var success = await ScheduleService.DeleteAsync(id);
+
+            if (success)
+            {
+                await LoadSchedulesAsync();
+            }
+            else
+            {
+                errorMessage = "Failed to cancel schedule.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error cancelling schedule: {ex.Message}";
+        }
+    }
+}
