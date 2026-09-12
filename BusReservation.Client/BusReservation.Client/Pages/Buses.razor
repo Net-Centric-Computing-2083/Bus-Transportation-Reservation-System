@@ -50,7 +50,8 @@ else
                             Edit
                         </a>
 
-                        <button class="btn btn-sm btn-danger">
+                        <button class="btn btn-sm btn-danger"
+                                 @onclick="() => DeleteBus(bus.BusId)">
                             Delete
                         </button>
                     </td>
@@ -70,6 +71,15 @@ else
         if (result is not null)
         {
             buses = result;
+        }
+    }
+    private async Task DeleteBus(int busId)
+    {
+        var response = await Http.DeleteAsync($"api/bus/{busId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            buses.RemoveAll(b => b.BusId == busId);
         }
     }
 }
