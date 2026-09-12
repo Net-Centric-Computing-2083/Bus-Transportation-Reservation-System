@@ -1,0 +1,74 @@
+﻿@using System.Net.Http.Json
+@inject HttpClient Http
+@page "/buses"
+@using BusReservation.Client.Models
+
+<PageTitle>Bus Management</PageTitle>
+
+<h1>Bus Management</h1>
+
+<p>Manage buses available in the transportation system.</p>
+
+<div class="mb-3">
+    <a href="/buses/add" class="btn btn-primary">
+        Add Bus
+    </a>
+</div>
+
+@if (buses.Count == 0)
+{
+    <div class="alert alert-info">
+        No buses available.
+    </div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Bus Number</th>
+                <th>Bus Name</th>
+                <th>Bus Type</th>
+                <th>Total Seats</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var bus in buses)
+            {
+                <tr>
+                    <td>@bus.BusNumber</td>
+                    <td>@bus.BusName</td>
+                    <td>@bus.BusType</td>
+                    <td>@bus.TotalSeats</td>
+                    <td>@bus.Status</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-2">
+                            Edit
+                        </button>
+
+                        <button class="btn btn-sm btn-danger">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Bus> buses = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await Http.GetFromJsonAsync<List<Bus>>("api/bus");
+
+        if (result is not null)
+        {
+            buses = result;
+        }
+    }
+}
