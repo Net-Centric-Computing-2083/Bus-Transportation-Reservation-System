@@ -1,0 +1,101 @@
+﻿@page "/buses/edit/{BusId:int}"
+@using BusReservation.Client.Models
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Bus</PageTitle>
+
+<h1>Edit Bus</h1>
+
+@if (bus is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <EditForm Model="@bus" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Bus Number</label>
+            <InputText class="form-control" @bind-Value="bus.BusNumber" />
+            <ValidationMessage For="@(() => bus.BusNumber)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Bus Name</label>
+            <InputText class="form-control" @bind-Value="bus.BusName" />
+            <ValidationMessage For="@(() => bus.BusName)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Bus Type</label>
+            <InputSelect class="form-select" @bind-Value="bus.BusType">
+                <option value="">Select bus type</option>
+                <option value="Normal">Normal</option>
+                <option value="Deluxe">Deluxe</option>
+                <option value="AC">AC</option>
+                <option value="Electric">Electric</option>
+            </InputSelect>
+            <ValidationMessage For="@(() => bus.BusType)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Total Seats</label>
+            <InputNumber class="form-control" @bind-Value="bus.TotalSeats" />
+            <ValidationMessage For="@(() => bus.TotalSeats)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Status</label>
+            <InputSelect class="form-select" @bind-Value="bus.Status">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+            </InputSelect>
+        </div>
+
+        <button type="submit" class="btn btn-primary me-2">
+            Update Bus
+        </button>
+
+        <button type="button"
+                class="btn btn-secondary"
+                @onclick="Cancel">
+            Cancel
+        </button>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public int BusId { get; set; }
+
+    private Bus? bus;
+
+    protected override async Task OnInitializedAsync()
+    {
+        bus = await Http.GetFromJsonAsync<Bus>($"api/bus/{BusId}");
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (bus is null)
+            return;
+
+        var response = await Http.PutAsJsonAsync(
+            $"api/bus/{BusId}",
+            bus);
+
+        if (response.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo("/buses");
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/buses");
+    }
+}
