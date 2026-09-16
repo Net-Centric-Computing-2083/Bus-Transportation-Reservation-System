@@ -1,0 +1,97 @@
+﻿@page "/drivers"
+@rendermode InteractiveServer
+
+@using BusReservation.Models
+@using BusReservation.Services
+
+@inject DriverService DriverService
+
+<h1>Driver Management</h1>
+
+<p>
+    <a href="/drivers/add">Add Driver</a>
+</p>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <p class="alert alert-success">@message</p>
+}
+
+@if (drivers == null)
+{
+    <p>Loading drivers...</p>
+}
+else if (drivers.Count == 0)
+{
+    <p>No drivers found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>License</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var driver in drivers)
+            {
+                <tr>
+                    <td>@driver.DriverId</td>
+                    <td>@driver.DriverName</td>
+                    <td>@driver.LicenseNumber</td>
+                    <td>@driver.Phone</td>
+                    <td>@driver.Address</td>
+                    <td>@driver.Status</td>
+
+                    <td>
+                        <a href="/drivers/edit/@driver.DriverId"
+                           class="btn btn-primary btn-sm">
+                            Edit
+                        </a>
+
+                        <button type="button"
+                                class="btn btn-danger btn-sm ms-2"
+                                @onclick="() => DeleteDriver(driver.DriverId)">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Driver>? drivers;
+    private string message = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        drivers = await DriverService.GetDrivers();
+    }
+
+    private async Task DeleteDriver(int id)
+    {
+        var response = await DriverService.DeleteDriver(id);
+
+        if (response.IsSuccessStatusCode)
+        {
+            message = "Driver deleted successfully!";
+
+            drivers = await DriverService.GetDrivers();
+        }
+        else
+        {
+            message = "Failed to delete driver.";
+        }
+    }
+}
+```

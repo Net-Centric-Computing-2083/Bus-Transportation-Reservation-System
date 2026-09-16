@@ -1,0 +1,118 @@
+﻿```razor
+@page "/drivers/edit/{id:int}"
+@rendermode InteractiveServer
+
+@using BusReservation.Models
+@using BusReservation.Services
+
+@inject DriverService DriverService
+@inject NavigationManager Navigation
+
+<h1>Edit Driver</h1>
+
+@if (driver == null)
+{
+    <p>Loading driver...</p>
+}
+else
+{
+    <EditForm Model="@driver"
+              OnValidSubmit="UpdateDriver"
+              FormName="EditDriverForm">
+
+        <div class="mb-3">
+            <label for="driverName">Driver Name</label>
+            <InputText id="driverName"
+                       class="form-control"
+                       @bind-Value="driver.DriverName" />
+        </div>
+
+        <div class="mb-3">
+            <label for="licenseNumber">License Number</label>
+            <InputText id="licenseNumber"
+                       class="form-control"
+                       @bind-Value="driver.LicenseNumber" />
+        </div>
+
+        <div class="mb-3">
+            <label for="phone">Phone</label>
+            <InputText id="phone"
+                       class="form-control"
+                       @bind-Value="driver.Phone" />
+        </div>
+
+        <div class="mb-3">
+            <label for="address">Address</label>
+            <InputText id="address"
+                       class="form-control"
+                       @bind-Value="driver.Address" />
+        </div>
+
+        <div class="mb-3">
+            <label for="status">Status</label>
+            <InputText id="status"
+                       class="form-control"
+                       @bind-Value="driver.Status" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Update Driver
+        </button>
+
+        <a href="/drivers" class="btn btn-secondary ms-2">
+            Cancel
+        </a>
+
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <div class="alert alert-info mt-3">
+            @message
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+
+    private Driver? driver;
+    private string message = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        driver = await DriverService.GetDriver(id);
+    }
+
+    private async Task UpdateDriver()
+    {
+        if (driver == null)
+            return;
+
+        try
+        {
+            var response = await DriverService.UpdateDriver(driver);
+
+            if (response.IsSuccessStatusCode)
+            {
+                message = "Driver updated successfully.";
+
+                await Task.Delay(1000);
+
+                Navigation.NavigateTo("/drivers", forceLoad: true);
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+
+                message = $"Update failed. Status: {response.StatusCode}. Error: {error}";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"Error: {ex.Message}";
+        }
+    }
+}
+```
