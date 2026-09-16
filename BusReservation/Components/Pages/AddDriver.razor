@@ -1,0 +1,89 @@
+﻿@page "/drivers/add"
+@rendermode InteractiveServer
+
+@using BusReservation.Models
+@using BusReservation.Services
+
+@inject DriverService DriverService
+@inject NavigationManager Navigation
+
+<h1>Add Driver</h1>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <p class="alert alert-success">@message</p>
+}
+
+<EditForm Model="@driver"
+          OnValidSubmit="SaveDriver"
+          FormName="AddDriverForm">
+
+    <div class="mb-3">
+        <label>Driver Name</label>
+        <InputText class="form-control"
+                   @bind-Value="driver.DriverName" />
+    </div>
+
+    <div class="mb-3">
+        <label>License Number</label>
+        <InputText class="form-control"
+                   @bind-Value="driver.LicenseNumber" />
+    </div>
+
+    <div class="mb-3">
+        <label>Phone</label>
+        <InputText class="form-control"
+                   @bind-Value="driver.Phone" />
+    </div>
+
+    <div class="mb-3">
+        <label>Address</label>
+        <InputText class="form-control"
+                   @bind-Value="driver.Address" />
+    </div>
+
+    <div class="mb-3">
+        <label>Status</label>
+        <InputText class="form-control"
+                   @bind-Value="driver.Status" />
+    </div>
+
+    <button type="submit" class="btn btn-success">
+        Add Driver
+    </button>
+
+    <a href="/drivers" class="btn btn-secondary ms-2">
+        Cancel
+    </a>
+
+</EditForm>
+
+@code {
+    private Driver driver = new Driver
+    {
+        Status = "Available"
+    };
+
+    private string message = "";
+
+    private async Task SaveDriver()
+    {
+        var response = await DriverService.AddDriver(driver);
+
+        if (response.IsSuccessStatusCode)
+        {
+            message = "Driver added successfully!";
+
+            StateHasChanged();
+
+            await Task.Delay(1500);
+
+            Navigation.NavigateTo("/drivers");
+        }
+        else
+        {
+            message = "Failed to add driver.";
+        }
+    }
+}
+```
